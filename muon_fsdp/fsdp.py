@@ -92,14 +92,12 @@ def collect_fsdp_modules(model: nn.Module) -> List[nn.Module]:
         for module in model.modules():
             if isinstance(module, FSDPModule):
                 fsdp_modules.append(module)
-        except ImportError:
-            # FSDP2 not available
-            logger.warning("FSDP2 not available, using single-process mode")
-            return []
-        
-        # Even if FSDP not available, ensure modules list is returned
-        return fsdp_modules
-        return fsdp_modules
+    except ImportError:
+        # FSDP2 not available
+        logger.warning("FSDP2 not available, using single-process mode")
+        return []
+
+    return fsdp_modules
 
 
 def has_fsdp_modules(model: nn.Module) -> bool:
@@ -449,8 +447,9 @@ class FSDPMuonOptimizer(Optimizer):
             if local_update.shape != param_data.shape:
                 local_update = local_update.reshape(param_data.shape)
 
-            # Apply update
-            param_data.add_(local_update)
+            # Apply update (use no_grad to avoid leaf variable issue)
+            with torch.no_grad():
+                param_data.copy_(param_data + local_update)
 
     def step(self, closure: Optional[callable] = None) -> Optional[float]:
         """Perform a single optimization step.
