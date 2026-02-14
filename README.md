@@ -1,32 +1,42 @@
-# Muon FSDP2
+# FSDP2 Utils
 
-高性能 Muon 优化器实现，支持 PyTorch FSDP2（Fully Sharded Data Parallel）分布式训练。
+通用 PyTorch FSDP2 工具库 - 提供 FSDP2 下的通用操作和优化器抽象。
 
 ## 概述
 
-Muon 是一种通过 Newton-Schulz 迭代保持权重矩阵正交性的优化算法，能够为大语言模型提供更快的收敛速度。本实现增加了原生 FSDP2 支持，可在多 GPU 上进行分布式训练。
+这是一个通用的 FSDP2 工具库，不仅包含 Muon 优化器，还提供：
+- DTensor 操作工具
+- 分布式通信原语
+- FSDP 模块管理
+- 优化器抽象基类（方便移植其他优化器到 FSDP2）
 
 ### 核心特性
 
+- **通用 FSDP2 工具**：DTensor 操作、梯度收集、更新分片
 - **Newton-Schulz 正交化**：保持权重矩阵正交，确保训练稳定
 - **FSDP2 集成**：支持分片参数处理和梯度全收集
-- **混合精度支持**：兼容 bf16/fp16，提升训练效率
-- **内存优化**：优化的分布式通信模式
-- **纯 PyTorch 实现**：无 MLX 或 JAX 依赖
+- **优化器基类**：轻松实现自定义 FSDP2 兼容优化器
+- **Mac 原型验证**：支持 CPU + Gloo 后端在 Mac 上做分布式逻辑验证
+- **纯 PyTorch 实现**：无 torch.compile，无自定义 CUDA 扩展
 
 ## 安装
 
+### 环境要求
+
+- Python 3.12+
+- PyTorch 2.9.0 - 2.10.0
+
 ### 使用 uv（推荐）
 
-本项目推荐使用 [uv](https://github.com/astral-sh/uv) 作为包管理器，配置清华 PyPI 镜像为主源，华为云镜像为辅源，国内访问速度更快。
+本项目推荐使用 [uv](https://github.com/astral-sh/uv) 作为包管理器，配置清华 PyPI 镜像为主源，华为云镜像为辅源。
 
 ```bash
 # 安装 uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 克隆项目
-git clone https://github.com/hanlinxuy/my_muon_fsdp2.git
-cd my_muon_fsdp2
+git clone https://github.com/hanlinxuy/muon_fsdp.git
+cd muon_fsdp
 
 # 使用 uv 创建虚拟环境并安装（自动使用清华+华为镜像）
 uv venv
@@ -40,8 +50,8 @@ uv pip sync requirements.txt
 
 ```bash
 # 从源码安装
-git clone https://github.com/hanlinxuy/my_muon_fsdp2.git
-cd my_muon_fsdp2
+git clone https://github.com/hanlinxuy/muon_fsdp.git
+cd muon_fsdp
 pip install -e ".[dev]"
 
 # 或仅安装核心包

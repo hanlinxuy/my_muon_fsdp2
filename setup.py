@@ -9,8 +9,8 @@ from setuptools import find_packages, setup
 
 def get_version() -> str:
     """Get package version from __init__.py."""
-    # Read version from __init__.py
-    init_path = "muon_fsdp/__init__.py"
+    # Read version from __init__.py (src layout)
+    init_path = "src/muon_fsdp/__init__.py"
     with open(init_path, "r", encoding="utf-8") as f:
         content = f.read()
 
@@ -65,7 +65,7 @@ setup(
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
-    packages=find_packages(exclude=["tests", "examples"]),
+    packages=find_packages(where=["src"], exclude=["tests", "examples"]),
     python_requires=">=3.9",
     install_requires=[
         "torch>=2.10.0",
