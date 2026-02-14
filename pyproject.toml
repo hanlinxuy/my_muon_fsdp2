@@ -22,8 +22,22 @@ lint = [
 muon-fsdp = "muon_fsdp.cli:main"
 
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+# UV 配置 - 使用清华源为主，华为源为辅
+[[tool.uv.index]]
+name = "tsinghua"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+default = true
+
+[[tool.uv.index]]
+name = "huawei"
+url = "https://repo.huaweicloud.com/repository/pypi/simple"
+
+[tool.uv.pip]
+index-url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+extra-index-url = ["https://repo.huaweicloud.com/repository/pypi/simple"]
 
 [tool.setuptools.packages.find]
 exclude = ["tests", "examples"]

@@ -16,6 +16,28 @@ Muon 是一种通过 Newton-Schulz 迭代保持权重矩阵正交性的优化算
 
 ## 安装
 
+### 使用 uv（推荐）
+
+本项目推荐使用 [uv](https://github.com/astral-sh/uv) 作为包管理器，配置清华 PyPI 镜像为主源，华为云镜像为辅源，国内访问速度更快。
+
+```bash
+# 安装 uv
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 克隆项目
+git clone https://github.com/hanlinxuy/my_muon_fsdp2.git
+cd my_muon_fsdp2
+
+# 使用 uv 创建虚拟环境并安装（自动使用清华+华为镜像）
+uv venv
+uv pip install -e ".[dev]"
+
+# 或使用 uv 同步依赖
+uv pip sync requirements.txt
+```
+
+### 使用 pip
+
 ```bash
 # 从源码安装
 git clone https://github.com/hanlinxuy/my_muon_fsdp2.git
@@ -24,6 +46,18 @@ pip install -e ".[dev]"
 
 # 或仅安装核心包
 pip install -e .
+```
+
+### 配置镜像源（可选）
+
+如果使用 pip，建议配置国内镜像源加速下载：
+
+```bash
+# 清华源
+pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 或华为源
+pip config set global.index-url https://repo.huaweicloud.com/repository/pypi/simple
 ```
 
 ## 快速开始

@@ -264,10 +264,10 @@ class HDSPMuonOptimizer(Optimizer):
             yield
             return
 
+        handles = []
         try:
             from torch.distributed.fsdp import FullyShardedDataParallel as FSDP
 
-            handles = []
             for module in self.model.modules():
                 if isinstance(module, FSDP):
                     handle = module.unshard()
@@ -314,7 +314,7 @@ class HDSPMuonOptimizer(Optimizer):
 
         return gathered_grads
 
-    def step(self, closure: Any = None) -> Optional[torch.Tensor]:
+    def step(self, closure: Any = None) -> Optional[float]:
         """执行优化器步骤
 
         1. 聚合梯度（在 FSDP 组内）

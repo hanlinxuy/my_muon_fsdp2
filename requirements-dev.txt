@@ -1,0 +1,11 @@
+# UV 配置文件
+# 使用方式: uv pip install -r requirements-dev.txt
+
+# 主 PyPI 镜像 - 清华源
+--index-url https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 辅助镜像 - 华为云
+--extra-index-url https://repo.huaweicloud.com/repository/pypi/simple
+
+# 项目依赖（包含开发依赖）
+-e ".[dev,lint]"
