@@ -80,11 +80,11 @@ from .distributed import all_gather_grads
 
 ## ANTI-PATTERNS (THIS PROJECT)
 
-1. **Missing cli.py**: `setup.py` declares `muon-fsdp=muon_fsdp.cli:main` but `cli.py` does NOT exist. CLI will fail at runtime. Fix: create `muon_fsdp/cli.py` or remove entry point.
+1. ~~**Missing cli.py**~~: ✅ Fixed - `muon_fsdp/cli.py` 已创建
 
-2. **No lint config files**: No `.ruff.toml`, `mypy.ini`, or `pyproject.toml`. Relies on tool defaults.
+2. **No lint config files**: No `.ruff.toml`, `mypy.ini`. Relies on tool defaults.
 
-3. **No coverage config**: pytest-cov in dev deps but no `.coveragerc` or pyproject.toml coverage settings.
+3. ~~**No coverage config**~~: ✅ Fixed - `.coveragerc` 已创建
 
 4. **Legacy setup.py**: Modern projects use `pyproject.toml`. Migration recommended.
 
