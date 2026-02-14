@@ -8,7 +8,6 @@ weight matrices.
 from typing import Any, Optional
 
 import torch
-from torch import Tensor
 from torch.optim.optimizer import Optimizer
 
 from .utils import zeropower_via_newtonschulz5
@@ -130,9 +129,7 @@ class MuonOptimizer(Optimizer):
 
                 grad = p.grad
                 if grad.is_sparse:
-                    raise RuntimeError(
-                        "MuonOptimizer does not support sparse gradients"
-                    )
+                    raise RuntimeError("MuonOptimizer does not support sparse gradients")
 
                 # Initialize state if needed
                 state = self.state[p]
@@ -149,7 +146,6 @@ class MuonOptimizer(Optimizer):
                 # Compute update direction
                 if nesterov:
                     # Nesterov: update = grad + beta * buf
-                    # Using alpha parameter directly (lerp computes input * weight + (1-weight) * other)
                     update = grad + momentum * buf
                 else:
                     # Standard momentum: update = buf

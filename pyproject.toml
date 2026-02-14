@@ -1,0 +1,54 @@
+[project]
+name = "muon-fsdp"
+version = "0.1.0"
+description = "Muon optimizer with FSDP2 support for PyTorch"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Muon FSDP Contributors"}]
+requires-python = ">=3.9"
+dependencies = ["torch>=2.10.0"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+]
+lint = [
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+muon-fsdp = "muon_fsdp.cli:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+exclude = ["tests", "examples"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow",
+    "distributed: marks tests requiring distributed",
+    "cuda: marks tests requiring CUDA",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "C4"]
+ignore = [
+    "N803",  # argument name should be lowercase (math notation like G, X, A, B)
+    "N806",  # variable should be lowercase (math notation)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["muon_fsdp"]

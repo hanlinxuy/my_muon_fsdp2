@@ -1,0 +1,25 @@
+# Coverage configuration for muon-fsdp
+
+[run]
+source = muon_fsdp
+omit =
+    */tests/*
+    */examples/*
+    */mocks/*
+    */__pycache__/*
+
+[report]
+precision = 2
+show_missing = True
+skip_covered = False
+
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+
+[html]
+directory = htmlcov

@@ -87,7 +87,6 @@ def all_gather_grads(
 
         # Get tensor shape for gathering
         world_size = get_world_size()
-        rank = get_rank()
 
         # Create output tensor with space for all processes
         output_shape = list(grad.shape)
@@ -154,8 +153,7 @@ def scatter_updates(
 
         if dim_size % world_size != 0:
             raise ValueError(
-                f"Update dimension ({dim_size}) must be divisible by "
-                f"world_size ({world_size})"
+                f"Update dimension ({dim_size}) must be divisible by world_size ({world_size})"
             )
 
         # Create output tensor for this process

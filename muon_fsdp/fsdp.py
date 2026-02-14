@@ -9,8 +9,9 @@ computation on full matrices.
 from __future__ import annotations
 
 import logging
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 import torch
 import torch.nn as nn
@@ -191,16 +192,16 @@ class FSDPMuonOptimizer(Optimizer):
             logger.info(f"Detected {len(self.fsdp_modules)} FSDP modules")
 
         # Default hyperparameters
-        defaults = dict(
-            lr=lr,
-            weight_decay=weight_decay,
-            momentum=momentum,
-            nesterov=nesterov,
-            ns_steps=ns_steps,
-            ns_stepsize=ns_stepsize,
-            beta2=beta2,
-            eps=eps,
-        )
+        defaults = {
+            "lr": lr,
+            "weight_decay": weight_decay,
+            "momentum": momentum,
+            "nesterov": nesterov,
+            "ns_steps": ns_steps,
+            "ns_stepsize": ns_stepsize,
+            "beta2": beta2,
+            "eps": eps,
+        }
 
         super().__init__(params, defaults)
 
@@ -485,7 +486,7 @@ class FSDPMuonOptimizer(Optimizer):
             ns_stepsize = group["ns_stepsize"]
 
             # Step 1: Apply weight decay and momentum to get preprocessed gradients
-            preprocessed_grads = self._apply_weight_decay_and_momentum(params, group)
+            self._apply_weight_decay_and_momentum(params, group)  # noqa: F841
 
             # Step 2: Gather gradients from all processes
             # This is done outside unshard context to avoid unnecessary memory usage

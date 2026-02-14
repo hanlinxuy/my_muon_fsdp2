@@ -84,9 +84,7 @@ class CausalSelfAttention(nn.Module):
         # Causal mask
         T_pos = att.size(-1)
         mask = (
-            torch.triu(
-                torch.ones(T_pos, T_pos, device=x.device, dtype=att.dtype), diagonal=1
-            )
+            torch.triu(torch.ones(T_pos, T_pos, device=x.device, dtype=att.dtype), diagonal=1)
             * -1e10
         )
         att = att + mask
@@ -148,9 +146,7 @@ class GPTModel(nn.Module):
         self.wpe = nn.Embedding(n_positions, n_embd)
         self.drop = nn.Dropout(dropout)
 
-        self.h = nn.ModuleList(
-            [TransformerBlock(n_embd, n_head, dropout) for _ in range(n_layer)]
-        )
+        self.h = nn.ModuleList([TransformerBlock(n_embd, n_head, dropout) for _ in range(n_layer)])
 
         self.ln_f = nn.LayerNorm(n_embd)
 
@@ -259,9 +255,7 @@ class HybridMuonAdamW(optim.Optimizer):
 
                 grad = p.grad
                 if grad.is_sparse:
-                    raise RuntimeError(
-                        "HybridMuonAdamW does not support sparse gradients"
-                    )
+                    raise RuntimeError("HybridMuonAdamW does not support sparse gradients")
 
                 # Classify parameter type
                 is_2d = p.dim() == 2
@@ -342,7 +336,7 @@ class HybridMuonAdamW(optim.Optimizer):
         exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
         exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
 
-        bias_c  # Bias correctionorrection1 = 1 - beta1 ** step
+        bias_correction1 = 1 - beta1**step
         bias_correction2 = 1 - beta2**step
 
         # Compute step size
@@ -565,9 +559,7 @@ class HybridTrainer:
                     if self.scaler is not None:
                         self.scaler.unscale_(self.optimizer.optimizer)
                     else:
-                        torch.nn.utils.clip_grad_norm_(
-                            self.model.parameters(), self.max_grad_norm
-                        )
+                        torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.max_grad_norm)
 
                 if self.scaler is not None:
                     self.scaler.step(self.optimizer.optimizer)
@@ -595,19 +587,13 @@ class HybridTrainer:
             epoch_losses.append(epoch_loss)
 
             epoch_time = time.time() - start_time
-            print(
-                f"Epoch {epoch + 1}/{num_epochs}: "
-                f"loss={epoch_loss:.4f}, "
-                f"time={epoch_time:.1f}s"
-            )
+            print(f"Epoch {epoch + 1}/{num_epochs}: loss={epoch_loss:.4f}, time={epoch_time:.1f}s")
 
         return epoch_losses
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Train GPT with hybrid Muon+AdamW optimizer"
-    )
+    parser = argparse.ArgumentParser(description="Train GPT with hybrid Muon+AdamW optimizer")
     parser.add_argument(
         "--model",
         type=str,
@@ -624,12 +610,8 @@ def main():
     parser.add_argument(
         "--adamw-lr", type=float, default=1e-3, help="AdamW learning rate for 1D params"
     )
-    parser.add_argument(
-        "--fsdp", action="store_true", help="Use FSDP2 for distributed training"
-    )
-    parser.add_argument(
-        "--no-mixed-precision", action="store_true", help="Disable mixed precision"
-    )
+    parser.add_argument("--fsdp", action="store_true", help="Use FSDP2 for distributed training")
+    parser.add_argument("--no-mixed-precision", action="store_true", help="Disable mixed precision")
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument("--device", type=str, default="cuda", help="Device to use")
 

@@ -49,6 +49,7 @@ from muon_fsdp import MuonOptimizer, FSDPMuonOptimizer
 @dataclass
 class GPTConfig:
     """Configuration for GPT-style model."""
+
     vocab_size: int = 50257
     n_positions: int = 1024
     n_embd: int = 768
@@ -62,6 +63,7 @@ class GPTConfig:
 
 class GPT2SmallConfig:
     """GPT-2 small configuration (117M parameters)."""
+
     vocab_size = 50257
     n_positions = 1024
     n_embd = 768
@@ -75,6 +77,7 @@ class GPT2SmallConfig:
 
 class GPT2MediumConfig:
     """GPT-2 medium configuration (345M parameters)."""
+
     vocab_size = 50257
     n_positions = 1024
     n_embd = 1024
@@ -88,6 +91,7 @@ class GPT2MediumConfig:
 
 class GPT2LargeConfig:
     """GPT-2 large configuration (774M parameters)."""
+
     vocab_size = 50257
     n_positions = 1024
     n_embd = 1280
@@ -118,7 +122,9 @@ class CausalSelfAttention(nn.Module):
         self.attn_dropout = nn.Dropout(config.attn_pdrop)
         self.resid_dropout = nn.Dropout(config.resid_pdrop)
 
-    def forward(self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         B, T, C = x.size()
 
         # Compute Q, K, V
@@ -141,7 +147,10 @@ class CausalSelfAttention(nn.Module):
 
         # Apply causal mask
         T_pos = att.size(-1)
-        mask = torch.triu(torch.ones(T_pos, T_pos, device=x.device, dtype=att.dtype), diagonal=1) * -1e10
+        mask = (
+            torch.triu(torch.ones(T_pos, T_pos, device=x.device, dtype=att.dtype), diagonal=1)
+            * -1e10
+        )
         att = att + mask
 
         # Apply attention mask if provided (for padding)
@@ -180,7 +189,9 @@ class Block(nn.Module):
             nn.Dropout(config.resid_pdrop),
         )
 
-    def forward(self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(
+        self, x: torch.Tensor, attention_mask: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         # Pre-LN architecture: apply layer norm before attention/MLP
         x_attn = self.attn(self.ln_1(x), attention_mask)
         x = x + x_attn
@@ -274,7 +285,7 @@ class DummyDataset(Dataset):
 
 
 @contextmanager
-def精度_context(enabled: bool = True) -> Iterator[None]:
+def precision_context(enabled: bool = True) -> Iterator[None]:
     """Context manager for mixed precision training."""
     if autocast is None or not enabled:
         yield
@@ -329,7 +340,7 @@ class GPT2Trainer:
             attention_mask = (batch != 0).float()
 
             # Forward pass with mixed precision
-            with精度_context(enabled=self.use_mixed_precision and self.scaler is None):
+            with precision_context(enabled=self.use_mixed_precision and self.scaler is None):
                 # Compute loss (shift for causal LM)
                 logits = self.model(batch, attention_mask)
                 # Shift for next token prediction
@@ -386,9 +397,7 @@ class GPT2Trainer:
             epoch_losses.append(epoch_loss)
 
             epoch_time = time.time() - start_time
-            print(f"Epoch {epoch + 1}/{num_epochs}: "
-                  f"loss={epoch_loss:.4f}, "
-                  f"time={epoch_time:.1f}s")
+            print(f"Epoch {epoch + 1}/{num_epochs}: loss={epoch_loss:.4f}, time={epoch_time:.1f}s")
 
         return epoch_losses
 
@@ -459,29 +468,27 @@ def create_muon_optimizer(
 
 def main():
     parser = argparse.ArgumentParser(description="Train GPT with Muon optimizer")
-    parser.add_argument("--model", type=str, default="gpt2",
-                        choices=["gpt2", "gpt2-medium", "gpt2-large"],
-                        help="Model size to use")
-    parser.add_argument("--epochs", type=int, default=3,
-                        help="Number of training epochs")
-    parser.add_argument("--lr", type=float, default=0.02,
-                        help="Learning rate")
-    parser.add_argument("--batch-size", type=int, default=8,
-                        help="Batch size per GPU")
-    parser.add_argument("--seq-length", type=int, default=512,
-                        help="Sequence length")
-    parser.add_argument("--num-workers", type=int, default=4,
-                        help="Number of data loader workers")
-    parser.add_argument("--fsdp", action="store_true",
-                        help="Use FSDP2 for distributed training")
-    parser.add_argument("--no-mixed-precision", action="store_true",
-                        help="Disable mixed precision training")
-    parser.add_argument("--seed", type=int, default=42,
-                        help="Random seed")
-    parser.add_argument("--device", type=str, default="cuda",
-                        help="Device to use")
-    parser.add_argument("--save-dir", type=str, default="checkpoints",
-                        help="Directory to save checkpoints")
+    parser.add_argument(
+        "--model",
+        type=str,
+        default="gpt2",
+        choices=["gpt2", "gpt2-medium", "gpt2-large"],
+        help="Model size to use",
+    )
+    parser.add_argument("--epochs", type=int, default=3, help="Number of training epochs")
+    parser.add_argument("--lr", type=float, default=0.02, help="Learning rate")
+    parser.add_argument("--batch-size", type=int, default=8, help="Batch size per GPU")
+    parser.add_argument("--seq-length", type=int, default=512, help="Sequence length")
+    parser.add_argument("--num-workers", type=int, default=4, help="Number of data loader workers")
+    parser.add_argument("--fsdp", action="store_true", help="Use FSDP2 for distributed training")
+    parser.add_argument(
+        "--no-mixed-precision", action="store_true", help="Disable mixed precision training"
+    )
+    parser.add_argument("--seed", type=int, default=42, help="Random seed")
+    parser.add_argument("--device", type=str, default="cuda", help="Device to use")
+    parser.add_argument(
+        "--save-dir", type=str, default="checkpoints", help="Directory to save checkpoints"
+    )
 
     args = parser.parse_args()
 
@@ -561,12 +568,15 @@ def main():
     # Save checkpoint
     os.makedirs(args.save_dir, exist_ok=True)
     checkpoint_path = os.path.join(args.save_dir, f"muon_{args.model}.pt")
-    torch.save({
-        "model_state_dict": model.state_dict(),
-        "optimizer_state_dict": optimizer.state_dict(),
-        "epoch": args.epochs,
-        "loss": losses[-1],
-    }, checkpoint_path)
+    torch.save(
+        {
+            "model_state_dict": model.state_dict(),
+            "optimizer_state_dict": optimizer.state_dict(),
+            "epoch": args.epochs,
+            "loss": losses[-1],
+        },
+        checkpoint_path,
+    )
     print(f"Checkpoint saved to {checkpoint_path}")
 
 

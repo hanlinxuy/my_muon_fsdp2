@@ -73,8 +73,6 @@ def zeropower_via_newtonschulz5(
     if G.numel() == 0:
         return G
 
-    # Store original shape for output
-    original_shape = G.shape
     transposed = G.size(-2) < G.size(-1)
 
     # Determine computation dtype
