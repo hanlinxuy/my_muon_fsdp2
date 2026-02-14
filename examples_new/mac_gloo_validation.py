@@ -100,7 +100,6 @@ def main() -> int:
     try:
         from torch.distributed.device_mesh import init_device_mesh
         from torch.distributed.fsdp import fully_shard
-        from torch.distributed.fsdp import ShardingStrategy
     except ImportError as e:
         logger.error(f"FSDP2 导入失败: {e}")
         torch.distributed.destroy_process_group()
@@ -128,7 +127,6 @@ def main() -> int:
     sharded_model = fully_shard(
         model,
         mesh=mesh,
-        sharding_strategy=ShardingStrategy.FULL_SHARD,
     )
 
     if rank == 0:

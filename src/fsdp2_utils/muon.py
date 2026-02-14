@@ -74,6 +74,8 @@ class MuonOptimizer(FSDPCompatibleOptimizer):
 
     def _step_impl(self) -> None:
         """执行 Muon 优化步骤。"""
+        from .dtensor import is_dtensor, get_local_tensor
+
         for group in self.param_groups:
             lr = group["lr"]
             momentum = group["momentum"]
@@ -91,20 +93,39 @@ class MuonOptimizer(FSDPCompatibleOptimizer):
                     continue
 
                 state = self.state[p]
+
+                grad_tensor = grad
+                if is_dtensor(grad_tensor):
+                    grad_tensor = get_local_tensor(grad_tensor)
+
+                grad_matrix = grad_tensor.reshape(grad_tensor.shape[0], -1).contiguous()
+                buf_shape = grad_matrix.shape
+
+                if "momentum_buffer" not in state:
+                    state["momentum_buffer"] = torch.zeros(
+                        buf_shape, device=grad_matrix.device, dtype=grad_matrix.dtype
+                    )
+
                 buf = state["momentum_buffer"]
-                local_buf = buf if not hasattr(buf, "to_local") else buf.to_local()
-                local_grad = grad if not hasattr(grad, "to_local") else grad.to_local()
+                if is_dtensor(buf):
+                    buf = get_local_tensor(buf)
+
+                if buf.shape != buf_shape:
+                    buf = torch.zeros(buf_shape, device=grad_matrix.device, dtype=grad_matrix.dtype)
 
                 if weight_decay != 0:
-                    local_p = p if not hasattr(p, "to_local") else p.to_local()
-                    local_grad = local_grad + weight_decay * local_p
+                    full_p = p
+                    if is_dtensor(p):
+                        full_p = get_local_tensor(p)
+                    full_p = full_p.reshape(full_p.shape[0], -1).contiguous()
+                    grad_matrix = grad_matrix + weight_decay * full_p
 
-                local_buf.lerp_(local_grad, 1 - momentum)
+                buf.lerp_(grad_matrix, 1 - momentum)
 
                 if nesterov:
-                    update = local_grad + momentum * local_buf
+                    update = grad_matrix + momentum * buf
                 else:
-                    update = local_buf.clone()
+                    update = buf.clone()
 
                 if p.dim() == 2:
                     update = zeropower_via_newtonschulz5(update, steps=ns_steps)
@@ -115,9 +136,7 @@ class MuonOptimizer(FSDPCompatibleOptimizer):
                     update.mul_(lr_scale)
 
                 update.mul_(-lr)
-
-                if weight_decay != 0:
-                    update.add_(local_p, alpha=-lr * weight_decay)
+                update = update.reshape(p.shape)
 
                 updates.append(update)
 
