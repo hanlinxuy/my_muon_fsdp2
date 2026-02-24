@@ -101,16 +101,17 @@ from .distributed import all_gather_grads
 ## COMMANDS
 
 ```bash
-# Install
-pip install -e ".[dev]"
+# Install (using uv - RECOMMENDED)
+uv venv
+uv sync --extra dev
 
 # Test (64 tests)
-pytest tests/ -v
-pytest tests/ -m "not slow"           # Skip slow tests
-pytest tests/test_optimizer.py -v      # Specific file
+python -m pytest tests/ -v
+python -m pytest tests/ -m "not slow"           # Skip slow tests
+python -m pytest tests/test_optimizer.py -v      # Specific file
 
 # Coverage
-pytest tests/ --cov=muon_fsdp
+python -m pytest tests/ --cov=muon_fsdp
 
 # Lint (requires setup)
 ruff check .
@@ -120,6 +121,67 @@ mypy muon_fsdp/ --ignore-missing-imports
 python examples/train_gpt.py --model gpt2 --epochs 3
 python examples/mixed_adamw.py --model gpt2
 ```
+
+## REMOTE SERVER TESTING
+
+### SSH Configuration
+
+Remote server is configured in `~/.ssh/config`:
+```
+Host cudo-jump
+  HostName 109.61.46.106
+  User kunlin
+  IdentityFile ~/.ssh/cudo_h100_key
+  IdentitiesOnly yes
+
+Host cudo-h100
+  HostName 10.82.0.128
+  User kunlin
+  IdentityFile ~/.ssh/cudo_h100_key
+  IdentitiesOnly yes
+  ProxyJump cudo-jump
+```
+
+### Environment Variables
+
+Remote config is stored in `.env` (gitignored):
+```
+REMOTE_HOST=cudo-h100
+REMOTE_USER=kunlin
+REMOTE_PORT=22
+REMOTE_WORKDIR=/home/kunlin/muon_fsdp
+```
+
+### Testing Workflow
+
+1. **Check GPU availability** (avoid disturbing others):
+```bash
+ssh cudo-h100 "nvidia-smi --query-gpu=index,memory.free,utilization.gpu --format=csv"
+```
+
+2. **Sync code** (exclude .git, __pycache__, etc.):
+```bash
+rsync -avz --exclude='.git' --exclude='__pycache__' --exclude='.pytest_cache' \
+  --exclude='*.pyc' --exclude='.env' --exclude='.coverage' -e ssh . cudo-h100:/home/kunlin/muon_fsdp/
+```
+
+3. **Setup environment** (if needed):
+```bash
+ssh cudo-h100 "source ~/.local/bin/env && cd ~/muon_fsdp && uv venv && uv sync --extra dev"
+```
+
+4. **Run tests**:
+```bash
+ssh cudo-h100 "source ~/.local/bin/env && cd ~/muon_fsdp && source .venv/bin/activate && \
+  CUDA_VISIBLE_DEVICES=4,5 python -m pytest tests/ -v"
+```
+
+### Dependencies Management
+
+**ALL dependencies managed via `pyproject.toml` + `uv`**:
+- No `requirements.txt` or `requirements-dev.txt`
+- Use `uv sync --extra dev` for development dependencies
+- Use `uv sync` for production dependencies
 
 ## NOTES
 
