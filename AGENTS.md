@@ -128,51 +128,51 @@ python examples/mixed_adamw.py --model gpt2
 
 Remote server is configured in `~/.ssh/config`:
 ```
-Host cudo-jump
-  HostName 109.61.46.106
-  User kunlin
-  IdentityFile ~/.ssh/cudo_h100_key
+Host <jump-host>
+  HostName <jump-ip>
+  User <username>
+  IdentityFile ~/.ssh/<your-key>
   IdentitiesOnly yes
 
-Host cudo-h100
-  HostName 10.82.0.128
-  User kunlin
-  IdentityFile ~/.ssh/cudo_h100_key
+Host <target-host>
+  HostName <target-ip>
+  User <username>
+  IdentityFile ~/.ssh/<your-key>
   IdentitiesOnly yes
-  ProxyJump cudo-jump
+  ProxyJump <jump-host>
 ```
 
 ### Environment Variables
 
 Remote config is stored in `.env` (gitignored):
 ```
-REMOTE_HOST=cudo-h100
-REMOTE_USER=kunlin
+REMOTE_HOST=<your-remote-host>
+REMOTE_USER=<your-username>
 REMOTE_PORT=22
-REMOTE_WORKDIR=/home/kunlin/muon_fsdp
+REMOTE_WORKDIR=/home/<username>/muon_fsdp
 ```
 
 ### Testing Workflow
 
 1. **Check GPU availability** (avoid disturbing others):
 ```bash
-ssh cudo-h100 "nvidia-smi --query-gpu=index,memory.free,utilization.gpu --format=csv"
+ssh $REMOTE_HOST "nvidia-smi --query-gpu=index,memory.free,utilization.gpu --format=csv"
 ```
 
 2. **Sync code** (exclude .git, __pycache__, etc.):
 ```bash
 rsync -avz --exclude='.git' --exclude='__pycache__' --exclude='.pytest_cache' \
-  --exclude='*.pyc' --exclude='.env' --exclude='.coverage' -e ssh . cudo-h100:/home/kunlin/muon_fsdp/
+  --exclude='*.pyc' --exclude='.env' --exclude='.coverage' -e ssh . $REMOTE_HOST:$REMOTE_WORKDIR/
 ```
 
 3. **Setup environment** (if needed):
 ```bash
-ssh cudo-h100 "source ~/.local/bin/env && cd ~/muon_fsdp && uv venv && uv sync --extra dev"
+ssh $REMOTE_HOST "source ~/.local/bin/env && cd $REMOTE_WORKDIR && uv venv && uv sync --extra dev"
 ```
 
 4. **Run tests**:
 ```bash
-ssh cudo-h100 "source ~/.local/bin/env && cd ~/muon_fsdp && source .venv/bin/activate && \
+ssh $REMOTE_HOST "source ~/.local/bin/env && cd $REMOTE_WORKDIR && source .venv/bin/activate && \
   CUDA_VISIBLE_DEVICES=4,5 python -m pytest tests/ -v"
 ```
 
